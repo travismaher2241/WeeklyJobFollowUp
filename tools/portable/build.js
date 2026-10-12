@@ -4,7 +4,7 @@ const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 const scripts=[
   read('node_modules/xlsx/dist/xlsx.full.min.js'),
   read('node_modules/jszip/dist/jszip.min.js'),
-  `const TEMPLATE_BASE64=${JSON.stringify(fs.readFileSync(path.join(root,'templates/customer-follow-up.xlsx')).toString('base64'))};\nconst modules={};\nfunction define(name,load){const module={exports:{}};load(module,id=>id==='xlsx'?XLSX:modules[id]);modules[name]=module.exports;}\n`+
+  `const modules={};\nfunction define(name,load){const module={exports:{}};load(module,id=>id==='xlsx'?XLSX:modules[id]);modules[name]=module.exports;}\n`+
   ['./export-dates','./excel-parser','./workbook-layout'].map(id=>`define(${JSON.stringify(id)},function(module,require){\n${read('lib/'+id.slice(2)+'.js')}\n});`).join('\n'),
   read('portable/app.js')
 ];

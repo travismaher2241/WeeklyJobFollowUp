@@ -29,26 +29,26 @@ test('missing job IDs are not invented; duplicate explicit IDs rejected',()=>{
 });
 test('export preserves typed dates, text PO, blank inputs, customer and all rows',()=>{
   const p=parsed([row(),row('Alpha','Merrifield Stage 57','23/10/2026')]);const b=createCustomerWorkbook('Alpha',p.openJobs,new Date('2026-10-02T00:00:00Z'));const s=read(b);
-  assert.equal(s.A3.v,'Alpha');assert.match(s.A4.v,/02\/10\/2026/);assert.equal(s.A10.v,'Aurora Stage 75');assert.equal(s.B10.v,'00123');assert.equal(s.B10.t,'s');assert.equal(xlsx.read(b,{type:'buffer'}).Sheets['Upcoming Jobs'].C10.v,46310);assert.equal(s.A11.v,'Merrifield Stage 57');assert.ok(!s.D10?.v&&!s.E10?.v);assert.ok(!Object.values(s).some(c=>c?.f));
-  assert.equal(s.D9.v,'Confirmed Date');assert.equal(s.E9.v,'Estimated Date');assert.equal(s.F9.v,'Comments (optional)');assert.ok(!s.F10?.v);
-  const xml=new AdmZip(b).readAsText('xl/worksheets/sheet1.xml');assert.match(xml,/D10:E11/);assert.match(xml,/A9:F11/);assert.match(xml,/ySplit="9"/);
+  assert.equal(s.A1.v,'Customer');assert.equal(s.B1.v,'Order Description');assert.equal(s.C1.v,'PO Number');assert.equal(s.D1.v,'Delivery Date');assert.equal(s.E1.v,'Confirmed Date');assert.equal(s.F1.v,'Estimated Date');assert.equal(s.G1.v,'Comments');
+  assert.equal(s.A2.v,'Alpha');assert.equal(s.B2.v,'Aurora Stage 75');assert.equal(s.C2.v,'00123');assert.equal(s.C2.t,'s');assert.equal(xlsx.read(b,{type:'buffer'}).Sheets['Upcoming Jobs'].D2.v,46310);
+  assert.equal(s.A3.v,'Alpha');assert.equal(s.B3.v,'Merrifield Stage 57');assert.ok(!s.E2?.v&&!s.F2?.v&&!s.G2?.v);assert.ok(!Object.values(s).some(c=>c?.f));
 });
 test('customer isolation enforced and ZIP contains one correct file per customer',()=>{
   const p=parsed([row('Alpha'),row('Beta','Beta only'),row('constructor','Special name')]);
   assert.throws(()=>createCustomerWorkbook('Alpha',p.openJobs,new Date()),/only that customer/);
   const batch={date:'2026-10-02',createdAt:new Date(),customers:p.uniqueCustomers.map(name=>({name,jobs:p.openJobs.filter(j=>j.customerName===name)}))};
   const zip=new AdmZip(createAllWorkbooks(batch));assert.equal(zip.getEntries().length,3);
-  for(const [i,c] of batch.customers.entries()){const sheet=read(zip.readFile(filename(c.name,i,batch.date)));assert.equal(sheet.A3.v,c.name);assert.equal(sheet.A10.v,c.jobs[0].description);assert.equal(sheet.A11,undefined);}
+  for(const [i,c] of batch.customers.entries()){const sheet=read(zip.readFile(filename(c.name,i,batch.date)));assert.equal(sheet.A2.v,c.name);assert.equal(sheet.B2.v,c.jobs[0].description);assert.equal(sheet.A3,undefined);}
 });
 test('spreadsheet markup and formula-like text stay literal; filenames use company and Australian date',()=>{
-  const text='=HYPERLINK("https://example.invalid", "A&B <tag>")';const p=parsed([row('A/B',text)]);const s=read(createCustomerWorkbook('A/B',p.openJobs,new Date()));assert.equal(s.A10.v,text);assert.equal(s.A10.t,'s');assert.equal(s.A10.f,undefined);
+  const text='=HYPERLINK("https://example.invalid", "A&B <tag>")';const p=parsed([row('A/B',text)]);const s=read(createCustomerWorkbook('A/B',p.openJobs,new Date()));assert.equal(s.B2.v,text);assert.equal(s.B2.t,'s');assert.equal(s.B2.f,undefined);
   assert.ok(!filename('../A/B',0,'2026-10-02').includes('/'));
   assert.equal(filename('Over Head Maintenance Services',13,'2026-10-02'),'Over Head Maintenance Services - 02-10-2026.xlsx');
   const p2=parsed([row('A/B'),row('A:B')]);
   assert.throws(()=>createAllWorkbooks({date:'2026-10-02',createdAt:new Date(),customers:p2.uniqueCustomers.map(name=>({name,jobs:p2.openJobs.filter(j=>j.customerName===name)}))}),/Two customers produce/);
 });
 test('optional actual Job Order Number included without replacing description or PO',()=>{
-  const p=parsed([{...row(),'Job Order Number':'JO-123'}]);const s=read(createCustomerWorkbook('Alpha',p.openJobs,new Date()));assert.equal(s.A10.v,'Aurora Stage 75\nJob Order: JO-123');assert.equal(s.B10.v,'00123');
+  const p=parsed([{...row(),'Job Order Number':'JO-123'}]);const s=read(createCustomerWorkbook('Alpha',p.openJobs,new Date()));assert.equal(s.B2.v,'Aurora Stage 75\nJob Order: JO-123');assert.equal(s.C2.v,'00123');
 });
 test('HTTP upload, preview, confirm, individual/ZIP download, isolated new upload, cancel, old public routes disabled',async()=>{
   const server=app.listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));const base=`http://127.0.0.1:${server.address().port}`;
@@ -58,7 +58,7 @@ test('HTTP upload, preview, confirm, individual/ZIP download, isolated new uploa
     const url=await upload([row(),row('Beta')]);assert.match(await(await req(url+'/preview')).text(),/Check your export/);
     assert.equal((await req(url+'/all.zip')).status,409);
     assert.equal((await req(url+'/confirm',{method:'POST'})).status,302);
-    let r=await req(url+'/customers/0.xlsx');assert.equal(r.status,200);assert.match(r.headers.get('content-disposition'),/attachment/);assert.equal(read(Buffer.from(await r.arrayBuffer())).A3.v,'Alpha');
+    let r=await req(url+'/customers/0.xlsx');assert.equal(r.status,200);assert.match(r.headers.get('content-disposition'),/attachment/);assert.equal(read(Buffer.from(await r.arrayBuffer())).A2.v,'Alpha');
     r=await req(url+'/all.zip');assert.equal(new AdmZip(Buffer.from(await r.arrayBuffer())).getEntries().length,2);
     const second=await upload([row('Only new customer')]);await req(second+'/confirm',{method:'POST'});assert.equal(new AdmZip(Buffer.from(await(await req(second+'/all.zip')).arrayBuffer())).getEntries().length,1);
     assert.equal((await req(url+'/customers/99.xlsx')).status,404);assert.equal((await req('/review/old-token')).status,404);assert.equal((await req('/review/old-token/submit',{method:'POST'})).status,404);

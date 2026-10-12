@@ -1,6 +1,6 @@
 'use strict';
 const {parseJobOrdersFile}=modules['./excel-parser'];
-const {renderWorksheet,filename}=modules['./workbook-layout'];
+const {buildWorkbook,filename}=modules['./workbook-layout'];
 const $=id=>document.getElementById(id);
 let batch=null,busy=false;
 const node=(tag,text)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;return n;};
@@ -36,10 +36,9 @@ $('prepareButton').addEventListener('click',()=>{
 });
 $('customerSearch').addEventListener('input',()=>{let count=0;document.querySelectorAll('[data-customer]').forEach(row=>{row.hidden=!row.dataset.customer.includes($('customerSearch').value.trim().toLowerCase());if(!row.hidden)count++;});$('noResults').hidden=count>0;});
 async function workbook(customer){
-  const zip=await JSZip.loadAsync(TEMPLATE_BASE64,{base64:true});
-  const sheet=await zip.file('xl/worksheets/sheet1.xml').async('string');
-  zip.file('xl/worksheets/sheet1.xml',renderWorksheet(sheet,customer.name,customer.jobs,batch.createdAt));
-  return zip.generateAsync({type:'uint8array',compression:'DEFLATE'});
+  const wb=buildWorkbook(XLSX,customer.name,customer.jobs,batch.createdAt);
+  const out=XLSX.write(wb,{bookType:'xlsx',type:'array'});
+  return new Uint8Array(out);
 }
 function save(bytes,name,type){const url=URL.createObjectURL(new Blob([bytes],{type}));const a=node('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);}
 $('downloadAll').addEventListener('click',()=>run(async()=>{
