@@ -1,0 +1,95 @@
+<%- include('header') %>
+
+<main class="flex-1 max-w-3xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10">
+  <div class="mb-6">
+    <a href="/admin" class="text-sm font-medium text-slate-500 hover:text-slate-800 transition inline-flex items-center">
+      &larr; Back to Dashboard
+    </a>
+    <h1 class="text-2xl font-bold text-slate-900 mt-2">Upload Ostendo Export</h1>
+    <p class="text-sm text-slate-500 mt-1">
+      Upload your latest Job Orders spreadsheet (.xls or .xlsx). Only records with Status = "Open" will be imported.
+    </p>
+  </div>
+
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="mb-6 rounded-lg bg-red-50 border border-red-200 p-4 text-red-700 text-sm">
+      <%= error %>
+    </div>
+  <% } %>
+
+  <div class="bg-white rounded-2xl border-2 border-dashed border-slate-300 p-8 sm:p-12 text-center hover:border-emerald-500 transition shadow-sm">
+    <form action="/admin/upload" method="POST" enctype="multipart/form-data" id="uploadForm">
+      <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+        </svg>
+      </div>
+
+      <h3 class="text-lg font-semibold text-slate-900">Select your Ostendo Excel Export</h3>
+      <p class="text-sm text-slate-500 mt-1 mb-6">Accepts .xls and .xlsx files (e.g. Job Orders.xls)</p>
+
+      <div class="flex flex-col items-center justify-center space-y-4">
+        <input 
+          type="file" 
+          name="excelFile" 
+          id="excelFileInput" 
+          accept=".xls,.xlsx" 
+          required 
+          class="block w-full max-w-sm text-sm text-slate-500
+            file:mr-4 file:py-2.5 file:px-4
+            file:rounded-lg file:border-0
+            file:text-sm file:font-semibold
+            file:bg-slate-100 file:text-slate-700
+            hover:file:bg-slate-200 cursor-pointer"
+          onchange="updateFileName(this)"
+        />
+
+        <div id="fileSelectionDetails" class="hidden text-xs text-slate-600 font-medium"></div>
+
+        <button 
+          type="submit" 
+          id="submitBtn"
+          class="w-full max-w-sm py-3 px-6 text-base font-semibold rounded-xl text-white bg-emerald-600 hover:bg-emerald-500 shadow-md transition flex items-center justify-center space-x-2"
+        >
+          <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+          </svg>
+          <span>Upload & Preview Import</span>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Expected Format Guidance -->
+  <div class="mt-8 bg-slate-100/70 rounded-xl p-5 border border-slate-200 text-xs text-slate-600 space-y-2">
+    <div class="font-bold text-slate-800 uppercase tracking-wide">Ostendo Export Columns Expected:</div>
+    <ul class="list-disc pl-5 space-y-1">
+      <li><strong>Status:</strong> Must be <code class="bg-white px-1 py-0.5 rounded text-emerald-700 font-semibold">Open</code>. Rows with other statuses (Closed, Completed, Lost) are automatically excluded.</li>
+      <li><strong>Customer:</strong> The customer or company name.</li>
+      <li><strong>Description:</strong> Job description / stage information.</li>
+      <li><strong>Purchase Order:</strong> Customer purchase order reference.</li>
+      <li><strong>Required Date:</strong> Required delivery date (DD/MM/YYYY).</li>
+    </ul>
+  </div>
+</main>
+
+<script>
+  function updateFileName(input) {
+    const details = document.getElementById('fileSelectionDetails');
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+      details.textContent = `Selected: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+      details.classList.remove('hidden');
+    } else {
+      details.classList.add('hidden');
+    }
+  }
+
+  document.getElementById('uploadForm').addEventListener('submit', function() {
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.classList.add('opacity-75', 'cursor-not-allowed');
+    btn.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg> Parsing spreadsheet...`;
+  });
+</script>
+<%- include('footer') %>

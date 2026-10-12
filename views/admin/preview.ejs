@@ -1,0 +1,121 @@
+<%- include('header') %>
+
+<main class="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="mb-6">
+    <div class="flex items-center space-x-2 text-xs font-semibold uppercase tracking-wider text-emerald-600 mb-1">
+      <span>Step 2 of 2</span>
+      <span>&bull;</span>
+      <span>Import Preview</span>
+    </div>
+    <h1 class="text-2xl font-bold text-slate-900">Review Import Snapshot</h1>
+    <p class="text-sm text-slate-500 mt-1">
+      Verify the open jobs and customer groupings parsed from <strong class="text-slate-800"><%= previewData.filename %></strong> before committing.
+    </p>
+  </div>
+
+  <!-- Summary Metric Badges -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+      <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Open Jobs</div>
+      <div class="text-2xl font-extrabold text-emerald-600 mt-1"><%= previewData.openJobsCount %></div>
+      <div class="text-xs text-slate-400 mt-0.5">Status = "Open"</div>
+    </div>
+
+    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+      <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Customers</div>
+      <div class="text-2xl font-extrabold text-slate-900 mt-1"><%= previewData.customersCount %></div>
+      <div class="text-xs text-slate-400 mt-0.5">Unique accounts</div>
+    </div>
+
+    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+      <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Import Date</div>
+      <div class="text-base font-bold text-slate-800 mt-2"><%= importDateFormatted %></div>
+      <div class="text-xs text-slate-400">Snapshot timestamp</div>
+    </div>
+
+    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+      <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Skipped / Excluded</div>
+      <div class="text-2xl font-extrabold <%= previewData.skippedRows.length > 0 ? 'text-amber-600' : 'text-slate-700' %> mt-1">
+        <%= previewData.skippedRows.length %>
+      </div>
+      <div class="text-xs text-slate-400 mt-0.5">Non-open or invalid</div>
+    </div>
+  </div>
+
+  <!-- Warning / Notice if any rows skipped -->
+  <% if (previewData.skippedRows && previewData.skippedRows.length > 0) { %>
+    <div class="mb-6 rounded-xl bg-amber-50 border border-amber-200 p-4 text-sm text-amber-900 shadow-sm">
+      <div class="font-bold flex items-center">
+        <svg class="w-4 h-4 mr-1.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+        <span><%= previewData.skippedRows.length %> row(s) were excluded:</span>
+      </div>
+      <ul class="list-disc pl-5 mt-2 space-y-1 text-xs text-amber-800">
+        <% previewData.skippedRows.slice(0, 5).forEach(function(skip) { %>
+          <li>Row <%= skip.rowNumber %>: <%= skip.reason %></li>
+        <% }); %>
+        <% if (previewData.skippedRows.length > 5) { %>
+          <li class="italic font-medium">...and <%= previewData.skippedRows.length - 5 %> more.</li>
+        <% } %>
+      </ul>
+    </div>
+  <% } %>
+
+  <!-- Preview Table of parsed open jobs -->
+  <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden mb-8">
+    <div class="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+      <div class="text-xs font-semibold text-slate-600 uppercase tracking-wider">
+        Sample Rows Preview (<%= Math.min(previewData.openJobs.length, 10) %> of <%= previewData.openJobsCount %> open jobs)
+      </div>
+    </div>
+    <div class="overflow-x-auto max-h-96 overflow-y-auto">
+      <table class="min-w-full divide-y divide-slate-200 text-xs">
+        <thead class="bg-slate-50 text-slate-600 font-semibold sticky top-0">
+          <tr>
+            <th class="px-4 py-2.5 text-left">Customer</th>
+            <th class="px-4 py-2.5 text-left">Description</th>
+            <th class="px-4 py-2.5 text-left">Purchase Order</th>
+            <th class="px-4 py-2.5 text-left">Required Date</th>
+            <th class="px-4 py-2.5 text-center">Status</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 bg-white">
+          <% previewData.openJobs.slice(0, 15).forEach(function(job) { %>
+            <tr class="hover:bg-slate-50">
+              <td class="px-4 py-2.5 font-medium text-slate-900"><%= job.customerName %></td>
+              <td class="px-4 py-2.5 text-slate-700"><%= job.description %></td>
+              <td class="px-4 py-2.5 text-slate-600"><%= job.purchaseOrder %></td>
+              <td class="px-4 py-2.5 font-semibold text-slate-900"><%= job.requiredDateFormatted %></td>
+              <td class="px-4 py-2.5 text-center">
+                <span class="inline-flex px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-100 text-emerald-800">
+                  Open
+                </span>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Action Bar: Commit or Cancel -->
+  <div class="flex items-center justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+    <a href="/admin/upload" class="px-4 py-2 text-sm font-semibold rounded-lg text-slate-700 hover:bg-slate-100 border border-slate-300 transition">
+      Cancel & Re-upload
+    </a>
+
+    <form action="/admin/preview/<%= previewId %>/commit" method="POST" class="inline">
+      <button 
+        type="submit" 
+        class="inline-flex items-center px-6 py-2.5 text-sm font-bold rounded-lg text-white bg-emerald-600 hover:bg-emerald-500 shadow-md transition"
+      >
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+        Confirm & Commit Import (<%= previewData.openJobsCount %> Jobs)
+      </button>
+    </form>
+  </div>
+</main>
+<%- include('footer') %>

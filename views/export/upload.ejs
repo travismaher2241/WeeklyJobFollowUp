@@ -1,0 +1,11 @@
+<%-include('header')%>
+<p class="eyebrow">1. Upload · 2. Check · 3. Download</p>
+<h1>Customer follow-up spreadsheets</h1>
+<p class="intro">Upload your Ostendo export. Get a separate Excel file for each customer, ready to attach to an email.</p>
+<% if(error){ %><div class="alert" role="alert"><%=error%></div><% } %>
+<section class="upload panel"><h2>Upload Job Orders</h2><p>Choose an .xls or .xlsx file. Only open jobs will be included.</p>
+<form action="/upload" method="post" enctype="multipart/form-data" data-busy="Reading spreadsheet…"><label for="excelFile">Ostendo Excel export</label><input id="excelFile" name="excelFile" type="file" accept=".xls,.xlsx" required><button type="submit">Upload & preview</button></form></section>
+<section class="panel"><h2>Simple for your customers</h2><p>If every date is correct, they can reply <strong>“All dates confirmed”</strong>. Otherwise, they enter confirmed dates (if firm), estimated dates (if provisional), or comments in the yellow cells, save the file and email it back.</p></section>
+<p class="muted">Expected columns: Status, Customer, Description, Purchase Order and Required Date. Job Order Number is optional. Use the first worksheet with headings in row 1.</p>
+<p class="muted">Uploads stay available for eight hours while the app is running. Download the files before closing it.</p>
+<%-include('footer')%>

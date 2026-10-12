@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Confirm Your Required Dates | Plasgain</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+  </style>
+</head>
+<body class="min-h-full flex flex-col pb-28">
+
+  <!-- Header -->
+  <header class="bg-white border-b border-slate-200 py-4 px-4 sm:px-6 shadow-sm sticky top-0 z-20">
+    <div class="max-w-2xl mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-2.5">
+        <div class="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center font-bold text-white shadow-sm text-sm">
+          P
+        </div>
+        <div>
+          <span class="text-base font-extrabold tracking-tight text-slate-900 block leading-tight">PLASGAIN</span>
+          <span class="text-[11px] text-slate-500 font-medium">Production & Delivery Schedule</span>
+        </div>
+      </div>
+      <div class="text-right">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider block">Customer</span>
+        <span class="text-sm font-bold text-slate-900 truncate max-w-[180px] sm:max-w-xs block"><%= reviewData.reviewRequest.customer_name %></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="max-w-2xl w-full mx-auto px-4 py-6 flex-1">
+    
+    <!-- Previously Confirmed Notice (if already responded) -->
+    <% if (reviewData.latestResponse) { %>
+      <div class="mb-5 rounded-xl border <%= reviewData.latestResponse.response_type === 'CHANGES_SUBMITTED' ? 'border-amber-200 bg-amber-50 text-amber-900' : 'border-emerald-200 bg-emerald-50 text-emerald-900' %> p-4 text-xs sm:text-sm flex items-start space-x-3 shadow-sm">
+        <svg class="w-5 h-5 <%= reviewData.latestResponse.response_type === 'CHANGES_SUBMITTED' ? 'text-amber-600' : 'text-emerald-600' %> flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <div>
+          <div class="font-bold">
+            <% if (reviewData.latestResponse.response_type === 'CONFIRMED_ALL') { %>
+              You confirmed all dates on <%= reviewData.latestResponse.responded_at_formatted %>.
+            <% } else { %>
+              You submitted date changes on <%= reviewData.latestResponse.responded_at_formatted %>.
+            <% } %>
+          </div>
+          <div class="text-slate-600 mt-0.5">
+            If your schedule has changed, you can update your required dates below at any time.
+          </div>
+        </div>
+      </div>
+    <% } %>
+
+    <!-- Intro Box -->
+    <div class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-sm mb-6">
+      <h1 class="text-xl sm:text-2xl font-bold text-slate-900 leading-tight">
+        Please confirm your current required dates
+      </h1>
+      <p class="text-sm sm:text-base text-slate-600 mt-2 leading-relaxed">
+        We're reviewing our current production and delivery requirements and want to make sure the dates we have against your open orders still match when you need them.
+      </p>
+
+      <div class="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between text-xs sm:text-sm text-slate-500 font-medium">
+        <span><%= reviewData.jobs.length %> open order<%= reviewData.jobs.length === 1 ? '' : 's' %> listed</span>
+        <span class="text-slate-400">All dates shown as DD/MM/YYYY</span>
+      </div>
+    </div>
+
+    <!-- Job Orders List -->
+    <div class="space-y-4" id="jobsList">
+      <% reviewData.jobs.forEach(function(job, index) { %>
+        <div 
+          class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm transition hover:border-slate-300 job-card"
+          id="job-card-<%= job.id %>"
+          data-job-id="<%= job.id %>"
+          data-orig-date="<%= job.required_date %>"
+          data-orig-formatted="<%= job.required_date_formatted %>"
+          data-desc="<%= job.description %>"
+          data-po="<%= job.purchase_order %>"
+        >
+          <!-- Description & PO -->
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Description</div>
+              <h3 class="text-base sm:text-lg font-bold text-slate-900 mt-0.5 leading-snug">
+                <%= job.description %>
+              </h3>
+            </div>
+          </div>
+
+          <div class="mt-3 pt-3 border-t border-slate-100 grid grid-cols-2 gap-4">
+            <div>
+              <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Purchase Order</div>
+              <div class="text-sm font-semibold text-slate-800 mt-0.5 font-mono">
+                <%= job.purchase_order && job.purchase_order !== 'TBA' ? job.purchase_order : 'TBA' %>
+              </div>
+            </div>
+
+            <div>
+              <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Current Required Date</div>
+              <div class="text-base font-bold text-emerald-700 mt-0.5" id="date-display-<%= job.id %>">
+                <%= job.required_date_formatted %>
+              </div>
+            </div>
+          </div>
+
+          <!-- Date Change Section (Initially Hidden) -->
+          <div id="change-panel-<%= job.id %>" class="hidden mt-4 pt-4 border-t border-slate-100 bg-slate-50 -mx-5 -mb-5 p-5 rounded-b-2xl">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" for="date-input-<%= job.id %>">
+              Select New Required Date
+            </label>
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <input 
+                type="date" 
+                id="date-input-<%= job.id %>"
+                value="<%= job.required_date %>"
+                min="2026-01-01"
+                class="w-full sm:w-auto px-3 py-2 border border-slate-300 rounded-lg text-sm font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                onchange="handleDateChange(<%= job.id %>)"
+              />
+              <button 
+                type="button" 
+                onclick="cancelDateChange(<%= job.id %>)"
+                class="px-3 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-lg transition"
+              >
+                Cancel / Keep Original (<%= job.required_date_formatted %>)
+              </button>
+            </div>
+            <div id="date-diff-notice-<%= job.id %>" class="hidden mt-2 text-xs font-bold text-amber-700"></div>
+          </div>
+
+          <!-- Card Actions (Default State) -->
+          <div id="default-actions-<%= job.id %>" class="mt-4 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
+            <button 
+              type="button" 
+              onclick="showDateChange(<%= job.id %>)"
+              class="inline-flex items-center text-xs font-semibold text-slate-600 hover:text-emerald-700 hover:underline py-1"
+            >
+              <svg class="w-3.5 h-3.5 mr-1 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+              <span>Change Date</span>
+            </button>
+
+            <button 
+              type="button" 
+              onclick="toggleContactBox(<%= job.id %>)"
+              class="text-xs font-medium text-slate-500 hover:text-slate-800 py-1"
+            >
+              Please contact me about this order
+            </button>
+          </div>
+
+          <!-- Contact Me Comment Box (Initially Hidden) -->
+          <div id="contact-panel-<%= job.id %>" class="hidden mt-3 pt-3 border-t border-slate-100">
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="flex items-center space-x-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  id="contact-check-<%= job.id %>" 
+                  checked
+                  onchange="handleContactToggle(<%= job.id %>)"
+                  class="rounded text-emerald-600 focus:ring-emerald-500 h-4 w-4"
+                />
+                <span>Please contact me regarding this order</span>
+              </label>
+              <button 
+                type="button" 
+                onclick="closeContactBox(<%= job.id %>)"
+                class="text-[11px] text-slate-400 hover:text-slate-600"
+              >
+                Dismiss
+              </button>
+            </div>
+            <input 
+              type="text" 
+              id="comment-input-<%= job.id %>"
+              placeholder="Optional comment (e.g. site access delayed, split delivery requested)"
+              class="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg text-slate-700 placeholder-slate-400 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+              oninput="updateChangeCount()"
+            />
+          </div>
+
+        </div>
+      <% }); %>
+    </div>
+
+  </main>
+
+  <!-- STICKY BOTTOM ACTION BAR -->
+  <div class="fixed bottom-0 inset-x-0 bg-white border-t border-slate-300 p-4 shadow-2xl z-30">
+    <div class="max-w-2xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+      
+      <!-- Status description on bottom bar -->
+      <div class="text-center sm:text-left">
+        <div id="actionSummaryTitle" class="text-sm font-bold text-slate-900">
+          Everything looks good?
+        </div>
+        <div id="actionSummarySub" class="text-xs text-slate-500">
+          One click confirms all <%= reviewData.jobs.length %> open order dates.
+        </div>
+      </div>
+
+      <!-- Action Button Container -->
+      <div class="w-full sm:w-auto flex items-center space-x-2">
+        <button 
+          type="button" 
+          id="primaryActionBtn"
+          onclick="handlePrimaryAction()"
+          class="w-full sm:w-auto min-w-[220px] py-3.5 px-6 rounded-xl text-base font-bold text-white bg-emerald-600 hover:bg-emerald-500 active:scale-[0.99] shadow-lg transition flex items-center justify-center space-x-2"
+        >
+          <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+          </svg>
+          <span id="primaryBtnText">CONFIRM ALL CURRENT DATES</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- CONFIRMATION MODAL (When changes are made) -->
+  <div id="changeModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 transform transition-all">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <h3 class="text-lg font-bold text-slate-900">Review Your Requested Changes</h3>
+        <button onclick="closeChangeModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+      </div>
+
+      <p class="text-xs text-slate-500 mt-2">
+        Please check your amended dates before submitting. Our production team will update our schedule accordingly.
+      </p>
+
+      <div class="my-4 max-h-60 overflow-y-auto divide-y divide-slate-100 border border-slate-200 rounded-xl" id="changeSummaryList">
+        <!-- Injected dynamically -->
+      </div>
+
+      <div class="flex items-center justify-end space-x-3 pt-3 border-t border-slate-100">
+        <button 
+          type="button" 
+          onclick="closeChangeModal()"
+          class="px-4 py-2 text-sm font-semibold rounded-lg text-slate-600 hover:bg-slate-100 border border-slate-200"
+        >
+          Keep Editing
+        </button>
+        <button 
+          type="button" 
+          id="confirmSubmitChangesBtn"
+          onclick="submitChangesPayload()"
+          class="px-5 py-2.5 text-sm font-bold rounded-lg text-white bg-amber-600 hover:bg-amber-500 shadow transition flex items-center"
+        >
+          <span>Confirm & Submit Changes</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const token = "<%= reviewData.reviewRequest.token %>";
+    const totalJobsCount = <%= reviewData.jobs.length %>;
+
+    // Track user changes in state
+    const jobChanges = {}; // { [jobId]: { newDate: 'YYYY-MM-DD', contact: bool, comment: string } }
+
+    function formatDateAU(isoStr) {
+      if (!isoStr) return '';
+      const parts = isoStr.split('-');
+      if (parts.length === 3) {
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+      }
+      return isoStr;
+    }
+
+    function showDateChange(jobId) {
+      document.getElementById(`change-panel-${jobId}`).classList.remove('hidden');
+      document.getElementById(`default-actions-${jobId}`).classList.add('hidden');
+      document.getElementById(`date-input-${jobId}`).focus();
+    }
+
+    function cancelDateChange(jobId) {
+      const card = document.getElementById(`job-card-${jobId}`);
+      const origDate = card.getAttribute('data-orig-date');
+      const origFormatted = card.getAttribute('data-orig-formatted');
+
+      document.getElementById(`date-input-${jobId}`).value = origDate;
+      document.getElementById(`date-display-${jobId}`).innerHTML = origFormatted;
+      document.getElementById(`change-panel-${jobId}`).classList.add('hidden');
+      document.getElementById(`default-actions-${jobId}`).classList.remove('hidden');
+      document.getElementById(`date-diff-notice-${jobId}`).classList.add('hidden');
+
+      if (jobChanges[jobId]) {
+        delete jobChanges[jobId].newDate;
+        if (!jobChanges[jobId].contact && !jobChanges[jobId].comment) {
+          delete jobChanges[jobId];
+        }
+      }
+      card.classList.remove('border-amber-400', 'bg-amber-50/20');
+      updateChangeCount();
+    }
+
+    function handleDateChange(jobId) {
+      const card = document.getElementById(`job-card-${jobId}`);
+      const origDate = card.getAttribute('data-orig-date');
+      const origFormatted = card.getAttribute('data-orig-formatted');
+      const newDateVal = document.getElementById(`date-input-${jobId}`).value;
+
+      if (!newDateVal) return;
+
+      if (newDateVal !== origDate) {
+        const newFormatted = formatDateAU(newDateVal);
+        jobChanges[jobId] = jobChanges[jobId] || {};
+        jobChanges[jobId].newDate = newDateVal;
+        jobChanges[jobId].newFormatted = newFormatted;
+
+        // Visual feedback
+        card.classList.add('border-amber-400', 'bg-amber-50/20');
+        document.getElementById(`date-display-${jobId}`).innerHTML = `
+          <span class="line-through text-slate-400 text-xs font-normal mr-1">${origFormatted}</span>
+          <span class="text-amber-800 font-extrabold">${newFormatted}</span>
+        `;
+        const diffNotice = document.getElementById(`date-diff-notice-${jobId}`);
+        diffNotice.textContent = `New date set: ${newFormatted}`;
+        diffNotice.classList.remove('hidden');
+      } else {
+        cancelDateChange(jobId);
+      }
+      updateChangeCount();
+    }
+
+    function toggleContactBox(jobId) {
+      const panel = document.getElementById(`contact-panel-${jobId}`);
+      panel.classList.toggle('hidden');
+      const isVisible = !panel.classList.contains('hidden');
+      if (isVisible) {
+        jobChanges[jobId] = jobChanges[jobId] || {};
+        jobChanges[jobId].contact = true;
+      }
+      updateChangeCount();
+    }
+
+    function closeContactBox(jobId) {
+      document.getElementById(`contact-panel-${jobId}`).classList.add('hidden');
+      if (jobChanges[jobId]) {
+        delete jobChanges[jobId].contact;
+        delete jobChanges[jobId].comment;
+        if (!jobChanges[jobId].newDate) {
+          delete jobChanges[jobId];
+        }
+      }
+      updateChangeCount();
+    }
+
+    function handleContactToggle(jobId) {
+      const checked = document.getElementById(`contact-check-${jobId}`).checked;
+      if (checked) {
+        jobChanges[jobId] = jobChanges[jobId] || {};
+        jobChanges[jobId].contact = true;
+      } else {
+        if (jobChanges[jobId]) {
+          delete jobChanges[jobId].contact;
+        }
+      }
+      updateChangeCount();
+    }
+
+    function updateChangeCount() {
+      // Count jobs with altered date or contact requested
+      let changedDatesCount = 0;
+      let contactRequestsCount = 0;
+
+      for (const id in jobChanges) {
+        const comment = document.getElementById(`comment-input-${id}`);
+        if (comment && comment.value.trim()) {
+          jobChanges[id].comment = comment.value.trim();
+        }
+        if (jobChanges[id].newDate) changedDatesCount++;
+        if (jobChanges[id].contact) contactRequestsCount++;
+      }
+
+      const totalChanges = changedDatesCount + contactRequestsCount;
+      const primaryBtn = document.getElementById('primaryActionBtn');
+      const primaryBtnText = document.getElementById('primaryBtnText');
+      const summaryTitle = document.getElementById('actionSummaryTitle');
+      const summarySub = document.getElementById('actionSummarySub');
+
+      if (totalChanges === 0) {
+        // Default Confirm All state
+        primaryBtn.className = "w-full sm:w-auto min-w-[220px] py-3.5 px-6 rounded-xl text-base font-bold text-white bg-emerald-600 hover:bg-emerald-500 active:scale-[0.99] shadow-lg transition flex items-center justify-center space-x-2";
+        primaryBtn.innerHTML = `
+          <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+          </svg>
+          <span>CONFIRM ALL CURRENT DATES</span>
+        `;
+        summaryTitle.textContent = "Everything looks good?";
+        summarySub.textContent = `One click confirms all ${totalJobsCount} open order dates.`;
+      } else {
+        // Changes state
+        primaryBtn.className = "w-full sm:w-auto min-w-[220px] py-3.5 px-6 rounded-xl text-base font-bold text-white bg-amber-600 hover:bg-amber-500 active:scale-[0.99] shadow-lg transition flex items-center justify-center space-x-2";
+        primaryBtn.innerHTML = `
+          <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+          </svg>
+          <span>SUBMIT CHANGES (${totalChanges})</span>
+        `;
+        summaryTitle.textContent = `${totalChanges} change${totalChanges === 1 ? '' : 's'} pending`;
+        summarySub.textContent = "Click to review and submit your updated dates.";
+      }
+    }
+
+    function handlePrimaryAction() {
+      const changedKeys = Object.keys(jobChanges).filter(k => jobChanges[k].newDate || jobChanges[k].contact || jobChanges[k].comment);
+      
+      if (changedKeys.length === 0) {
+        // No changes made -> Directly confirm all
+        submitConfirmAll();
+      } else {
+        // Show change summary modal before submitting
+        openChangeModal();
+      }
+    }
+
+    function submitConfirmAll() {
+      const btn = document.getElementById('primaryActionBtn');
+      btn.disabled = true;
+      btn.innerHTML = `<svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg> Confirming dates...`;
+
+      // Build payload
+      const allCards = document.querySelectorAll('.job-card');
+      const items = [];
+      allCards.forEach(card => {
+        const jobId = parseInt(card.getAttribute('data-job-id'));
+        const origDate = card.getAttribute('data-orig-date');
+        items.push({
+          jobId: jobId,
+          originalRequiredDate: origDate,
+          newRequiredDate: null,
+          isChanged: false,
+          contactRequested: false,
+          customerComment: null
+        });
+      });
+
+      fetch(`/review/${token}/submit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          responseType: 'CONFIRMED_ALL',
+          items: items
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          window.location.href = `/review/${token}/thank-you?type=confirmed`;
+        } else {
+          alert('Submission error: ' + (data.error || 'Please try again.'));
+          btn.disabled = false;
+          updateChangeCount();
+        }
+      })
+      .catch(err => {
+        alert('Network error. Please try again.');
+        btn.disabled = false;
+        updateChangeCount();
+      });
+    }
+
+    function openChangeModal() {
+      const modal = document.getElementById('changeModal');
+      const list = document.getElementById('changeSummaryList');
+      list.innerHTML = '';
+
+      for (const jobId in jobChanges) {
+        const change = jobChanges[jobId];
+        const card = document.getElementById(`job-card-${jobId}`);
+        const desc = card.getAttribute('data-desc');
+        const po = card.getAttribute('data-po');
+        const origFormatted = card.getAttribute('data-orig-formatted');
+
+        const row = document.createElement('div');
+        row.className = 'p-3 bg-white text-xs';
+        let html = `
+          <div class="font-bold text-slate-900">${desc}</div>
+          <div class="text-slate-500 font-mono mt-0.5">PO: ${po || 'TBA'}</div>
+        `;
+
+        if (change.newDate) {
+          html += `
+            <div class="mt-1 flex items-center space-x-2">
+              <span class="text-slate-400">Current: <span class="line-through">${origFormatted}</span></span>
+              <span class="text-emerald-700 font-bold">&rarr; New: ${change.newFormatted}</span>
+            </div>
+          `;
+        }
+
+        if (change.contact) {
+          html += `<div class="mt-1 text-red-600 font-semibold">&bull; Contact requested regarding this order</div>`;
+        }
+        if (change.comment) {
+          html += `<div class="mt-0.5 text-slate-600 italic">"${change.comment}"</div>`;
+        }
+
+        row.innerHTML = html;
+        list.appendChild(row);
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    function closeChangeModal() {
+      document.getElementById('changeModal').classList.add('hidden');
+    }
+
+    function submitChangesPayload() {
+      const btn = document.getElementById('confirmSubmitChangesBtn');
+      btn.disabled = true;
+      btn.innerHTML = `<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg> Submitting...`;
+
+      const allCards = document.querySelectorAll('.job-card');
+      const items = [];
+
+      allCards.forEach(card => {
+        const jobId = parseInt(card.getAttribute('data-job-id'));
+        const origDate = card.getAttribute('data-orig-date');
+        const change = jobChanges[jobId];
+
+        if (change) {
+          items.push({
+            jobId: jobId,
+            originalRequiredDate: origDate,
+            newRequiredDate: change.newDate || origDate,
+            isChanged: Boolean(change.newDate && change.newDate !== origDate),
+            contactRequested: Boolean(change.contact),
+            customerComment: change.comment || null
+          });
+        } else {
+          // Unchanged job
+          items.push({
+            jobId: jobId,
+            originalRequiredDate: origDate,
+            newRequiredDate: origDate,
+            isChanged: false,
+            contactRequested: false,
+            customerComment: null
+          });
+        }
+      });
+
+      fetch(`/review/${token}/submit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          responseType: 'CHANGES_SUBMITTED',
+          items: items
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          window.location.href = `/review/${token}/thank-you?type=changes`;
+        } else {
+          alert('Submission error: ' + (data.error || 'Please try again.'));
+          btn.disabled = false;
+        }
+      })
+      .catch(err => {
+        alert('Network error. Please try again.');
+        btn.disabled = false;
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+<%-include('header')%>
+<p class="eyebrow">Step 3 of 3</p><h1>Your customer files are ready</h1><p class="intro"><%=batch.openJobsCount%> open jobs across <%=batch.customersCount%> customers. Download and attach the files to your emails.</p>
+<div class="actions"><a class="button" href="/batches/<%=batch.id%>/all.zip">Download all customer files (.zip)</a><a class="button secondary" href="/">Upload another export</a></div>
+<p class="muted">Source: <%=batch.filename%> · Prepared <%=formatDateTimeAU(batch.createdAt)%></p>
+<label for="customerSearch">Find a customer</label><input type="search" id="customerSearch" placeholder="Search customer name" autocomplete="off">
+<div class="panel table-wrap"><table><thead><tr><th>Customer</th><th>Open jobs</th><th>Excel attachment</th></tr></thead><tbody><%batch.customers.forEach((c,i)=>{%><tr data-customer="<%=c.name.toLowerCase()%>"><td><strong><%=c.name%></strong><details><summary>View jobs</summary><ul class="jobs"><%c.jobs.forEach(j=>{%><li><strong><%=j.description%></strong><br><%if(j.jobOrderNumber){%>Job <%=j.jobOrderNumber%> · <%}%>PO: <%=j.purchaseOrder||'Not provided'%> · <%=j.requiredDateFormatted%></li><%})%></ul></details></td><td><%=c.jobs.length%></td><td><a class="button small secondary" href="/batches/<%=batch.id%>/customers/<%=i%>.xlsx">Download Excel<span class="sr-only"> for <%=c.name%></span></a></td></tr><%})%></tbody></table></div>
+<p id="noResults" hidden>No customers match your search.</p>
+<section class="panel"><h2>Email wording</h2><p>Please check the delivery dates in the attached spreadsheet. If all dates are correct, simply reply “All dates confirmed”. Otherwise, enter confirmed dates (if firm), estimated dates (if provisional), or comments in the yellow cells, save the file and email it back. Thank you.</p></section>
+<%-include('footer')%>

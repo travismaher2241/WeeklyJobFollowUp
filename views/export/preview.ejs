@@ -1,0 +1,9 @@
+<%-include('header')%>
+<p class="eyebrow">Step 2 of 3</p><h1>Check your export</h1><p class="intro"><%=batch.filename%></p>
+<div class="metrics"><div><strong><%=batch.openJobsCount%></strong> open jobs</div><div><strong><%=batch.customersCount%></strong> customer files</div><div><strong><%=batch.skippedRows.length%></strong> excluded rows</div></div>
+<p class="muted">Uploaded <%=formatDateTimeAU(batch.createdAt)%></p>
+<% if(batch.skippedRows.length){ %><details class="panel"><summary>Review all <%=batch.skippedRows.length%> excluded rows</summary><ul><%batch.skippedRows.forEach(r=>{%><li>Row <%=r.rowNumber%>: <%=r.reason%></li><%})%></ul></details><% } %>
+<div class="panel table-wrap"><table><thead><tr><th>Customer</th><th>Open jobs</th></tr></thead><tbody><%batch.customers.forEach(c=>{%><tr><td><%=c.name%></td><td><%=c.jobs.length%></td></tr><%})%></tbody></table></div>
+<p>Each file includes the order description, PO number, delivery date, and blank Confirmed Date, Estimated Date and Comments columns.</p>
+<div class="actions"><form method="post" action="/batches/<%=batch.id%>/confirm"><button>Prepare customer files</button></form><form method="post" action="/batches/<%=batch.id%>/cancel"><button class="secondary">Cancel</button></form></div>
+<%-include('footer')%>

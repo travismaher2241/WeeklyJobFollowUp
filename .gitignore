@@ -1,0 +1,10 @@
+node_modules/
+tools/spreadsheet/node_modules/
+uploads/
+*.db
+*.db-wal
+*.db-shm
+test/audit-results/
+test/export-results/
+test/portable-results/
+outputs/

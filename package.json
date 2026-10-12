@@ -1,0 +1,26 @@
+{
+  "name": "plasgain-job-follow-up",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test test/spreadsheet-export.test.js",
+    "test:browser": "node test/spreadsheet-browser.js",
+    "build:portable": "node tools/portable/build.js",
+    "test:portable": "node test/portable.test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "adm-zip": "^0.6.1",
+    "better-sqlite3": "^13.0.3",
+    "ejs": "^6.0.1",
+    "express": "^5.2.1",
+    "jszip": "^3.10.2",
+    "multer": "^2.4.0",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+  }
+}

@@ -1,0 +1,22 @@
+PLASGAIN JOB FOLLOW UP — PORTABLE EDITION
+
+1. Copy "Plasgain Job Follow Up.html" to your work laptop.
+2. Open it with Microsoft Edge or Google Chrome, already installed on the laptop.
+   If double-clicking opens an editor, right-click > Open with > Microsoft Edge.
+3. Choose your Ostendo Job Orders .xls or .xlsx export.
+4. Check the preview and select "Prepare customer files".
+5. Download one customer's Excel file, or all customer files in a ZIP.
+6. Attach each customer's spreadsheet to your email.
+
+Customers can reply "All dates confirmed", or enter confirmed or estimated dates and comments in
+the yellow cells, save and email the spreadsheet back.
+
+No installation, administrator rights, home-computer connection or internet
+connection is needed. Your export is processed in the browser on your laptop.
+Downloads go to your browser's normal Downloads folder.
+
+Download the files before closing or refreshing the page. Closing the page
+clears the loaded export. Your downloaded files remain saved.
+
+Only the HTML file is required. This note is optional. Use your company's
+approved method to transfer the file. The HTML contains no customer data.
