@@ -10,6 +10,7 @@ const batches=new Map();
 const TTL=8*60*60*1000;
 const upload=multer({storage:multer.memoryStorage(),limits:{fileSize:25*1024*1024},fileFilter(req,file,cb){cb(/\.xlsx?$/i.test(file.originalname)?null:new Error('Choose an .xls or .xlsx Excel file.'),true);}});
 app.disable('x-powered-by');
+app.set('trust proxy', true);
 app.set('view engine','ejs');app.set('views',path.join(__dirname,'views/export'));
 app.use((req,res,next)=>{
   res.set('Cache-Control','no-store');res.set('X-Content-Type-Options','nosniff');res.set('Referrer-Policy','same-origin');
@@ -22,7 +23,9 @@ app.use((req,res,next)=>{
     if(!crypto.timingSafeEqual(crypto.createHash('sha256').update(given).digest(),crypto.createHash('sha256').update(expected).digest())){
       return res.status(401).set('WWW-Authenticate','Basic realm="Plasgain spreadsheets"').send('Sign in to generate customer files.');
     }
-  } else if (!['localhost','127.0.0.1','[::1]'].includes(req.hostname)) return res.status(403).send('Local access only.');
+  } else if (process.env.LOCAL_ONLY === 'true' && !['localhost','127.0.0.1','[::1]'].includes(req.hostname)) {
+    return res.status(403).send('Local access only.');
+  }
   if(req.method==='POST' && req.headers.origin){
     try { if(new URL(req.headers.origin).host!==req.get('host')) return res.status(403).send('Request origin not allowed.'); }
     catch {return res.status(403).send('Invalid request origin.');}
